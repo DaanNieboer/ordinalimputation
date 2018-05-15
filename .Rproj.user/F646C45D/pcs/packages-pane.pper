@@ -1,0 +1,7 @@
+{
+    "installOptions" : {
+        "installDependencies" : true,
+        "installFromRepository" : false,
+        "libraryPath" : "V:/UserData/600003/Apps/R-3.5.0/library"
+    }
+}
