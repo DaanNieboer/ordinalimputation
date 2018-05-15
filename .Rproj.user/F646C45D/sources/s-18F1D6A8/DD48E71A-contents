@@ -1,0 +1,12 @@
+Package: ordinalimputation
+Type: Package
+Title: Pool results from the clmm function with multiple imputation
+Version: 0.1.0
+Author: D Nieboer
+Maintainer: D Nieboer <d.nieboer@erasmusmc.nl>
+Description: Provides several functions to pool results from the clmm function
+when using multiple imputation.
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
+Depends: mice, ordinal

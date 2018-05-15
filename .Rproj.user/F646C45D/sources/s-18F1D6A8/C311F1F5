@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1526379098760.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "C311F1F5",
+    "lastKnownWriteTime" : 1526379267,
+    "last_content_update" : 1526379267375,
+    "path" : "V:/UserData/600003/r-package/ordinalimputation/R/plot.pooled.clmm.R",
+    "project_path" : "R/plot.pooled.clmm.R",
+    "properties" : {
+        "cursorPosition" : "5,24",
+        "scrollLine" : "0",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 5,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

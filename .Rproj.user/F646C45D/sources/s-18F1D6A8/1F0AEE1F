@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1526378315663.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "1F0AEE1F",
+    "lastKnownWriteTime" : 1526379216,
+    "last_content_update" : 1526379216378,
+    "path" : "V:/UserData/600003/r-package/ordinalimputation/R/pool_clmm.R",
+    "project_path" : "R/pool_clmm.R",
+    "properties" : {
+        "cursorPosition" : "8,5",
+        "scrollLine" : "0",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
