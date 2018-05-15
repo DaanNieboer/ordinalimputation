@@ -7,29 +7,30 @@
 #' @return A clmm.pool object.
 #'
 pool.clmm <- function(x){
-# Pool fixed effects and standard deviation random effect.
-coefs        <- sapply(X = x$analyses, FUN = coefficients)
-std_re       <- sapply(X = lapply(X = x$analyses, FUN = get_re_std), FUN = unlist)
-vcov_fits    <- lapply(X = x$analyses, FUN = vcov)
-coefs_fit    <- t(rbind(coefs, std_re))
+  # Pool fixed effects and standard deviation random effect.
+  coefs        <- sapply(X = x$analyses, FUN = coefficients)
+  std_re       <- sapply(X = lapply(X = x$analyses, FUN = get_re_std),
+                         FUN = unlist)
+  vcov_fits    <- lapply(X = x$analyses, FUN = vcov)
+  coefs_fit    <- t(rbind(coefs, std_re))
 
-pool_fixed <- pool_rubin(coefs = coefs_fit, variance = vcov_fits)
+  pool_fixed <- pool_rubin(coefs = coefs_fit, variance = vcov_fits)
 
 
-fixef  <- data.frame(variable = colnames(coefs_fit)[-length(qbar)],
-                     coefficient = pool_fixed$estimate[-length(qbar)],
-                     se = sqrt(diag(pool_fixed$variance)[-length(qbar)]))
+  fixef  <- data.frame(variable = colnames(coefs_fit)[-ncol(coefs_fit)],
+                       coefficient = pool_fixed$estimate[-ncol(coefs_fit)],
+                       se = sqrt(diag(pool_fixed$variance)[-ncol(coefs_fit)]))
 
-std_re <- pool_fixed$estimate[length(qbar)]
+  std_re <- pool_fixed$estimate[ncol(coefs_fit)]
 
-ranef_fits   <- t(sapply(X = lapply(X = x$analyses, FUN = ranef), FUN = unlist))
-condVar_fits <- t(sapply(X = lapply(X = x$analyses, FUN = condVar), FUN = unlist))
+  ranef_fits   <- t(sapply(X = lapply(X = x$analyses, FUN = ranef), FUN = unlist))
+  condVar_fits <- t(sapply(X = lapply(X = x$analyses, FUN = condVar), FUN = unlist))
 
-random_effect <- pool_re(ranef_fits, condVar_fits)
+  random_effect <- pool_re(ranef_fits, condVar_fits)
 
-res <- list(fixed_effects = fixef, stDev = std_re, random_effects = random_effect)
-class(res) <- c("pooled.clmm")
-return(res)
+  res <- list(fixed_effects = fixef, stDev = std_re, random_effects = random_effect)
+  class(res) <- c("pooled.clmm")
+  return(res)
 }
 
 get_re_std <- function(x){
