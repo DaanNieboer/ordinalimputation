@@ -47,7 +47,7 @@ pool_rubin <- function(coefs, variance){
   wi_imp_var   <- Reduce("+", variance)/m
 
   totalVar     <- wi_imp_var + (1 + 1/m) * bw_imp_var
-  qbar         <- colMeans(coefs_fit)
+  qbar         <- colMeans(coefs)
 
   res <- list(estimate = qbar, variance = totalVar)
 }
