@@ -4,7 +4,10 @@
 #' @param x an mira object returned from the with.mids function from the mice
 #'          package.
 #'
-#' @return A clmm.pool object.
+#' @return A clmm.pool object. With the following elements:
+#' @slot fixed_effects Pooled fixed effect estimates and associated standard errors.
+#' @slot random_effects Pooled modes of random effects with associated conditional variances.
+#' @slot random_dist Standard deviation of the random effect distribution and associated median odds ratio
 #'
 pool.clmm <- function(x){
   # Pool fixed effects and standard deviation random effect.
@@ -17,18 +20,19 @@ pool.clmm <- function(x){
   pool_fixed <- pool_rubin(coefs = coefs_fit, variance = vcov_fits)
 
 
-  fixef  <- data.frame(variable = colnames(coefs_fit)[-ncol(coefs_fit)],
-                       coefficient = pool_fixed$estimate[-ncol(coefs_fit)],
+  fixef  <- data.frame(coefficient = pool_fixed$estimate[-ncol(coefs_fit)],
                        se = sqrt(diag(pool_fixed$variance)[-ncol(coefs_fit)]))
 
-  std_re <- pool_fixed$estimate[ncol(coefs_fit)]
+  std_dev <- pool_fixed$estimate[ncol(coefs_fit)]
+  mor     <- exp(sqrt(2 * std_dev^2) * qnorm(0.75))
+  std_re  <- data.frame(std_dev = std_dev, mor = mor)
 
   ranef_fits   <- t(sapply(X = lapply(X = x$analyses, FUN = ranef), FUN = unlist))
   condVar_fits <- t(sapply(X = lapply(X = x$analyses, FUN = condVar), FUN = unlist))
 
   random_effect <- pool_re(ranef_fits, condVar_fits)
 
-  res <- list(fixed_effects = fixef, stDev = std_re, random_effects = random_effect)
+  res <- list(fixed_effects = fixef, random_dist = std_re, random_effects = random_effect)
   class(res) <- c("pooled.clmm")
   return(res)
 }
@@ -70,4 +74,12 @@ pool_re <- function(re_mode, condvar){
     res$cond_var[i] <- wi_imp_var + (1 + 1/m) * bw_imp_var
   }
   return(res)
+}
+
+print.pooled.clmm <- function(x){
+  cat("Random effect parameters:\n")
+  print(x$random_dist)
+  cat("\n\nFixed effect estimates:\n")
+  print(x$fixed_effects)
+
 }
