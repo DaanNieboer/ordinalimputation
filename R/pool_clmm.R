@@ -4,31 +4,35 @@
 #' @param x an mira object returned from the with.mids function from the mice
 #'          package.
 #'
-#' @return A clmm.pool object. With the following elements:
+#' @return A pooled.clmm object. With the following elements:
 #' @slot fixed_effects Pooled fixed effect estimates and associated standard errors.
 #' @slot random_effects Pooled modes of random effects with associated conditional variances.
 #' @slot random_dist Standard deviation of the random effect distribution and associated median odds ratio
 #'
-pool.clmm <- function(x){
+pooling.clmmmira <- function(x){
   # Pool fixed effects and standard deviation random effect.
-  coefs        <- sapply(X = x$analyses, FUN = coefficients)
-  std_re       <- sapply(X = lapply(X = x$analyses, FUN = get_re_std),
+  coefs        <- sapply(X = x, FUN = coefficients)
+  std_re       <- sapply(X = lapply(X = x, FUN = get_re_std),
                          FUN = unlist)
-  vcov_fits    <- lapply(X = x$analyses, FUN = vcov)
+  vcov_fits    <- lapply(X = x, FUN = vcov)
   coefs_fit    <- t(rbind(coefs, std_re))
 
   pool_fixed <- pool_rubin(coefs = coefs_fit, variance = vcov_fits)
 
-
-  fixef  <- data.frame(coefficient = pool_fixed$estimate[-ncol(coefs_fit)],
-                       se = sqrt(diag(pool_fixed$variance)[-ncol(coefs_fit)]))
+  mu_fixed   <- pool_fixed$estimate[-ncol(coefs_fit)]
+  se_fixed   <- sqrt(diag(pool_fixed$variance)[-ncol(coefs_fit)])
+  ci_l_fixed <- mu_fixed - 1.96 * se_fixed
+  ci_u_fixed <- mu_fixed + 1.96 * se_fixed
+  fixef      <- cbind(mu_fixed, ci_l_fixed, ci_u_fixed)
+  rownames(fixef) <- names(pool_fixed$estimate[-ncol(coefs_fit)])
+  colnames(fixef) <- c("Estimate", "Lower 95% CI", "Upper 95% CI")
 
   std_dev <- pool_fixed$estimate[ncol(coefs_fit)]
   mor     <- exp(sqrt(2 * std_dev^2) * qnorm(0.75))
   std_re  <- data.frame(std_dev = std_dev, mor = mor)
 
-  ranef_fits   <- t(sapply(X = lapply(X = x$analyses, FUN = ranef), FUN = unlist))
-  condVar_fits <- t(sapply(X = lapply(X = x$analyses, FUN = condVar), FUN = unlist))
+  ranef_fits   <- t(sapply(X = lapply(X = x, FUN = ranef), FUN = unlist))
+  condVar_fits <- t(sapply(X = lapply(X = x, FUN = condVar), FUN = unlist))
 
   random_effect <- pool_re(ranef_fits, condVar_fits)
 
@@ -36,6 +40,10 @@ pool.clmm <- function(x){
   class(res) <- c("pooled.clmm")
   return(res)
 }
+pooling <- function(x,...){
+  UseMethod("pooling",x)
+}
+
 
 get_re_std <- function(x){
   res <- x$ST
