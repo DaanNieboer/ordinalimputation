@@ -9,7 +9,7 @@
 #' @slot random_effects Pooled modes of random effects with associated conditional variances.
 #' @slot random_dist Standard deviation of the random effect distribution and associated median odds ratio
 #'
-pooling.clmmmira <- function(x){
+pooling.clmm <- function(x){
   # Pool fixed effects and standard deviation random effect.
   coefs        <- sapply(X = x, FUN = coefficients)
   std_re       <- sapply(X = lapply(X = x, FUN = get_re_std),
@@ -23,7 +23,9 @@ pooling.clmmmira <- function(x){
   se_fixed   <- sqrt(diag(pool_fixed$variance)[-ncol(coefs_fit)])
   ci_l_fixed <- mu_fixed - 1.96 * se_fixed
   ci_u_fixed <- mu_fixed + 1.96 * se_fixed
+
   fixef      <- cbind(mu_fixed, ci_l_fixed, ci_u_fixed)
+
   rownames(fixef) <- names(pool_fixed$estimate[-ncol(coefs_fit)])
   colnames(fixef) <- c("Estimate", "Lower 95% CI", "Upper 95% CI")
 
@@ -36,7 +38,21 @@ pooling.clmmmira <- function(x){
 
   random_effect <- pool_re(ranef_fits, condVar_fits)
 
-  res <- list(fixed_effects = fixef, random_dist = std_re, random_effects = random_effect)
+  mu_random <- random_effect$mode
+  se_random <- sqrt(random_effect$cond_var)
+
+  ci_l_random <- mu_random - 1.96 * se_random
+  ci_u_random <- mu_random + 1.96 * se_random
+
+  random <- cbind(mu_random, ci_l_random, ci_u_random)
+
+
+  rownames(random) <- 1:nrow(random)
+  colnames(random) <- c("Estimate", "Lower 95% CI", "Upper 95% CI")
+
+  res <- list(fixed_effects = fixef, random_dist = std_re,
+              random_effects = random, se_fixed = se_fixed,
+              se_random = se_random)
   class(res) <- c("pooled.clmm")
   return(res)
 }
