@@ -19,17 +19,18 @@ pooling.clmm <- function(x){
 
   pool_fixed <- pool_rubin(coefs = coefs_fit, variance = vcov_fits)
 
-  mu_fixed   <- pool_fixed$estimate[-ncol(coefs_fit)]
-  se_fixed   <- sqrt(diag(pool_fixed$variance)[-ncol(coefs_fit)])
+  n_re       <- ncol(std_re)
+  mu_fixed   <- pool_fixed$estimate[1:(ncol(coefs_fit) - n_re)]
+  se_fixed   <- sqrt(diag(pool_fixed$variance)[1:(ncol(coefs_fit) - n_re)])
   ci_l_fixed <- mu_fixed - 1.96 * se_fixed
   ci_u_fixed <- mu_fixed + 1.96 * se_fixed
 
   fixef      <- cbind(mu_fixed, ci_l_fixed, ci_u_fixed)
 
-  rownames(fixef) <- names(pool_fixed$estimate[-ncol(coefs_fit)])
+  rownames(fixef) <- names(pool_fixed$estimate[1:(ncol(coefs_fit) - n_re)])
   colnames(fixef) <- c("Estimate", "Lower 95% CI", "Upper 95% CI")
 
-  std_dev <- pool_fixed$estimate[ncol(coefs_fit)]
+  std_dev <- pool_fixed$estimate[(ncol(coefs_fit) - n_re + 1):ncol(coefs_fit)]
   mor     <- exp(sqrt(2 * std_dev^2) * qnorm(0.75))
   std_re  <- data.frame(std_dev = std_dev, mor = mor)
 

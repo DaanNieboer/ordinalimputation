@@ -1,6 +1,6 @@
 #' A function to fit and pool results from a random effects with ordinal outcome
-#' using multiple imputation. Uncertainty in model parameters is calculated
-#' based on the model or through bootrstrapping.
+#' using multiple imputation. A 95% confidence interval for the random effect
+#' parameters can be calculated through bootstrapping or a profile lijkelihood approach.
 #'
 #' @param formula a two-sided linear formula object describing the fixed-effects
 #'                part of the model, with the response on the left of a ~
@@ -8,14 +8,17 @@
 #'                right. The vertical bar character "|" separates an expression
 #'                for a model matrix and a grouping factor.
 #' @param data A mids object containing the imputed data
-#' @param bootstrap an optional parameter indicitating if a 95% CI should be
-#'                  estimated using bootstrapping or model results.
-#'                  Default is bootrstrapping.
+#' @param ci_re Method to estimate the 95% confidence interval around the random
+#'              effect variance. Options are profile likelihood
+#'              or none. The default is none.
 #' @param n_boot optional parameter denoting the number of bootstrap samples
 #'               that need to be drawn.
 #' @return A pooled.clmm object containing the pooled parameter estimates.
 #'
-clmm.fitter <- function(formula, data, bootstrap = TRUE, n_boot = 1000,...){
+clmm.fitter <- function(formula, data,
+                        bootstrap = c("none", "profile"),
+                        n_boot = 1000,...){
+  bootstrap <- match.arg(bootstrap)
   n    <- nrow(complete(data, 1))
   data <- complete(data, action = "long", include = FALSE)
   data <- split(x = data, f = data$.imp)
@@ -23,17 +26,15 @@ clmm.fitter <- function(formula, data, bootstrap = TRUE, n_boot = 1000,...){
   res                  <- lapply(data, clmm_wrap, formula = formula,...)
   res_pooled           <- pooling.clmm(res)
   res_pooled$analyses  <- res
-  if(bootstrap){
+
+  n_re <- length(res_pooled$analyses[[1]]$ST)
+  if(bootstrap=="profile"){
+    if(n_re)
     cluster <- attributes(terms(formula))$term.labels
     cluster <- cluster[grepl("\\|", cluster)]
     cluster <- trimws(gsub("\\|", "", gsub("1", "", cluster)))
 
-    fit0      <- clmm_wrap(data = data[[1]], formula = formula)
-    n_fixed   <- length(fit0$coefficients)
-    n_random  <- length(fit0$ranef)
 
-    fixed_effects  <- matrix(nrow = n_boot, ncol = n_fixed)
-    random_effects <- matrix(nrow = n_boot, ncol = n_random)
     std_dev        <- matrix(nrow = n_boot, ncol = 2)
 
     for(i in 1:n_boot){
@@ -41,10 +42,12 @@ clmm.fitter <- function(formula, data, bootstrap = TRUE, n_boot = 1000,...){
       dta_boot <- lapply(data, "[", index, )
       res_boot <- try(lapply(dta_boot, clmm_wrap, formula = formula,...))
       res_boot <- pooling.clmm(res_boot)
-      if(class(res_boot)[1]!="try-error"&res_boot$fixed_effects==n_fixed){
-        fixed_effects[i, ]  <- res_boot$fixed_effects
-        random_effects[i, ] <- res_boot$random_effects
-        std_dev[i, ]        <- res_boot$random_dist
+      if(class(res_boot)[1]!="try-error"){
+        fixed_effects[i, ]  <- res_boot$fixed_effects[, 1]
+        if(length(res_boot$random_dist[, 1])==1){
+          random_effects[i, ] <- res_boot$random_effects
+        }
+        std_dev[i, ]        <- res_boot$random_dist[, 1]
       }else{
         warning("Unable to fit clmm in a bootstrapped sample.")
       }
