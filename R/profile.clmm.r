@@ -22,16 +22,41 @@ profile.clmm <- function(fitted, alpha = 0.01, n_steps = 200){
       mu_start[i]   <- x_profile[j, i]
       start         <- list(fitted$coefficients, exp(mu_start))
       fit_prof      <- update(fitted, start = start, eval.max = 1)
-      y_profile[j, i] <- sign(mu[i] - x_profile[j, i]) * sqrt(-2 * (fit_prof$logLik - fitted$logLik))
+      y_profile[j, i] <- -2 * (fit_prof$logLik - fitted$logLik)
 
     }
   }
-  x_min <- x_profile[which.min((pnorm(y_profile) - 1 - 0.05/2)^2)]
-  x_max <- x_profile[which.min((pnorm(y_profile) - 0.05/2)^2)]
-
-  limits <- exp(c(x_min, x_max))
+  res <- list(x_profile, y_profile)
 }
 
-ll_prof <- function(mu_prof, start, j, fitted){
+prof_ci <- function(fits, alpha = 0.05, index){
+  # Function to calculate the profile confidence interval around the
+  # variance of the random effect,
 
+  xmax    <- 5 * unlist(fits[[1]]$ST)[index]
+  ci.lb   <- optimize(f = score_prog_ll, interval = c(0, xmax),
+                              alpha = alpha/2, fits = fits)
+  ci.ub   <- optimize(f = score_prog_ll, interval = c(0, xmax),
+                              alpha = 1 - alpha/2, fits = fits)
+
+  return(c(ci.lb$par, ci.ub$par))
+}
+
+score_prog_ll <- function(x, fits, index, alpha){
+  ll_value <- sapply(X = fits, FUN = prof_ll, x = x, index = index)
+  avg_ll   <- mean(ll_value)
+
+  score <- (avg_ll - alpha)^2
+
+  return(score)
+}
+prof_ll <- function(fitted, x, index){
+  start <- list(fitted$coefficients, unlist(fitted$ST))
+  gamma <- start[[2]][index]
+  start[[2]][index] <- x
+
+  fit_prof <- update(fitted, start = start, eval.max = 1)
+  res <- pnorm(sign(x - gamma) * sqrt(-2 * (fit_prof$logLik - fitted$logLik)))
+
+  return(res)
 }

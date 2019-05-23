@@ -3,13 +3,17 @@
 #'
 #' @param x an mira object returned from the with.mids function from the mice
 #'          package.
+#' @param conf.int.re Type of 95% confidence interval for the variance of the
+#'                    random effect to be calculated. Default is none.
 #'
 #' @return A pooled.clmm object. With the following elements:
 #' @slot fixed_effects Pooled fixed effect estimates and associated standard errors.
 #' @slot random_effects Pooled modes of random effects with associated conditional variances.
 #' @slot random_dist Standard deviation of the random effect distribution and associated median odds ratio
-#'
-pooling.clmm <- function(x){
+#' @slot conf_in_re Optional 95% confidence interval of the variance of the random effects.
+pooling.clmm <- function(x, conf.int.re = c("none", "profile")){
+  conf.int.re <- match.arg(conf.int.re)
+
   # Pool fixed effects and standard deviation random effect.
   coefs        <- sapply(X = x, FUN = coefficients)
   std_re       <- sapply(X = lapply(X = x, FUN = get_re_std),
@@ -33,6 +37,16 @@ pooling.clmm <- function(x){
   std_dev <- pool_fixed$estimate[(ncol(coefs_fit) - n_re + 1):ncol(coefs_fit)]
   mor     <- exp(sqrt(2 * std_dev^2) * qnorm(0.75))
   std_re  <- data.frame(std_dev = std_dev, mor = mor)
+  if(conf.int.re=="profile"){
+    cat("Calculating profile likelihood, may take a very long time.\n")
+    conf_int <- matrix(nrow = n_re, ncol = 2)
+    for(i in 1:n_re){
+      conf_int[i, ] <- prof_ci(fits = x, index = i)
+    }
+    cat("Number ", i, "done\n")
+  }else{
+    conf_int <- NULL
+  }
 
   ranef_fits   <- t(sapply(X = lapply(X = x, FUN = ranef), FUN = unlist))
   condVar_fits <- t(sapply(X = lapply(X = x, FUN = condVar), FUN = unlist))
@@ -53,7 +67,7 @@ pooling.clmm <- function(x){
 
   res <- list(fixed_effects = fixef, random_dist = std_re,
               random_effects = random, se_fixed = se_fixed,
-              se_random = se_random)
+              se_random = se_random, conf_int_re = conf_int)
   class(res) <- c("pooled.clmm")
   return(res)
 }
