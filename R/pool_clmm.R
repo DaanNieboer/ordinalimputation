@@ -1,8 +1,8 @@
 #' Calculate pooled estimates of fixed effects, standard deviation of the
 #' random effect and conditional modes of the random effect terms.
 #'
-#' @param x an mira object returned from the with.mids function from the mice
-#'          package.
+#' @param x A list containing clmm fists. For instance the analyses slot from
+#'          a mira object of the mice package.
 #' @param conf.int.re Type of 95% confidence interval for the variance of the
 #'                    random effect to be calculated. Default is none.
 #'
@@ -23,7 +23,12 @@ pooling.clmm <- function(x, conf.int.re = c("none", "profile")){
 
   pool_fixed <- pool_rubin(coefs = coefs_fit, variance = vcov_fits)
 
-  n_re       <- ncol(std_re)
+  if(class(std_re)=="numeric"){
+    n_re <- 1
+  }else{
+    n_re <- nrow(std_re)
+  }
+
   mu_fixed   <- pool_fixed$estimate[1:(ncol(coefs_fit) - n_re)]
   se_fixed   <- sqrt(diag(pool_fixed$variance)[1:(ncol(coefs_fit) - n_re)])
   ci_l_fixed <- mu_fixed - 1.96 * se_fixed
