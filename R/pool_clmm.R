@@ -19,9 +19,9 @@ pooling.clmm <- function(x, conf.int.re = c("none", "profile"), data = NULL){
   coefs        <- sapply(X = x, FUN = coefficients)
   std_re       <- sapply(X = lapply(X = x, FUN = get_re_std),
                          FUN = unlist)
-  vcov_fits    <- lapply(X = x, FUN = vcov)
-  coefs_fit    <- t(rbind(coefs, std_re))
+  coefs_fit    <- t(coefs)
 
+  vcov_fits  <- lapply(X = x, FUN = get_vcov, coefs = rownames(coefs))
   pool_fixed <- pool_rubin(coefs = coefs_fit, variance = vcov_fits)
 
   if(class(std_re)=="numeric"){
@@ -30,8 +30,8 @@ pooling.clmm <- function(x, conf.int.re = c("none", "profile"), data = NULL){
     n_re <- nrow(std_re)
   }
 
-  mu_fixed   <- pool_fixed$estimate[1:(ncol(coefs_fit) - n_re)]
-  se_fixed   <- sqrt(diag(pool_fixed$variance)[1:(ncol(coefs_fit) - n_re)])
+  mu_fixed   <- pool_fixed$estimate
+  se_fixed   <- sqrt(diag(pool_fixed$variance))
   ci_l_fixed <- mu_fixed - 1.96 * se_fixed
   ci_u_fixed <- mu_fixed + 1.96 * se_fixed
 
@@ -130,4 +130,10 @@ print.pooled.clmm <- function(x){
   cat("\n\nFixed effect estimates:\n")
   print(x$fixed_effects)
 
+}
+
+get_vcov <- function(x, coefs){
+  res <- vcov(x)
+  res <- res[coefs, coefs]
+  return(res)
 }
