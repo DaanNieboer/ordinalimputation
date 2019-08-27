@@ -51,7 +51,7 @@ pooling.clmm <- function(x, conf.int.re = c("none", "profile"), data = NULL){
     conf_int <- matrix(nrow = n_re, ncol = 2)
     for(i in 1:n_re){
       conf_int[i, ] <- prof_ci(fits = x, index = i, data = data)
-      cat("Number ", i, "done\n")
+      cat("Random effect variabce number ", i, "done\n")
     }
   }else{
     conf_int <- NULL
