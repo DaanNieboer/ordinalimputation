@@ -37,10 +37,14 @@ pooling.clmm <- function(x, conf.int.re = c("none", "profile"), data = NULL){
 
   fixef      <- cbind(mu_fixed, ci_l_fixed, ci_u_fixed)
 
-  rownames(fixef) <- names(pool_fixed$estimate[1:(ncol(coefs_fit) - n_re)])
+  rownames(fixef) <- names(pool_fixed$estimate)
   colnames(fixef) <- c("Estimate", "Lower 95% CI", "Upper 95% CI")
+  if(n_re==1){
+    std_dev <- sqrt(mean(std_re))
+  }else{
+    std_dev <- sqrt(rowMeans(std_re))
+  }
 
-  std_dev <- pool_fixed$estimate[(ncol(coefs_fit) - n_re + 1):ncol(coefs_fit)]
   mor     <- exp(sqrt(2 * std_dev^2) * qnorm(0.75))
   std_re  <- data.frame(std_dev = std_dev, mor = mor)
   if(conf.int.re=="profile"){
