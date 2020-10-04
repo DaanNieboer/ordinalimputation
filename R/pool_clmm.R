@@ -13,6 +13,11 @@
 #' @slot random_dist Standard deviation of the random effect distribution and associated median odds ratio
 #' @slot conf_in_re Optional 95% confidence interval of the variance of the random effects.
 pooling.clmm <- function(x, conf.int.re = c("none", "profile"), data = NULL){
+  
+  #some models would be inside a analyses element of a mice::mira object
+  if (length(x))<=1 & is.element("analyses", names(x) ) ) {
+    x<-x$analyses
+  }
   conf.int.re <- match.arg(conf.int.re)
 
   # Pool fixed effects and standard deviation random effect.
@@ -61,8 +66,8 @@ pooling.clmm <- function(x, conf.int.re = c("none", "profile"), data = NULL){
     conf_int <- NULL
   }
 
-  ranef_fits   <- t(sapply(X = lapply(X = x, FUN = ranef), FUN = unlist))
-  condVar_fits <- t(sapply(X = lapply(X = x, FUN = condVar), FUN = unlist))
+  ranef_fits   <- t(sapply(X = lapply(X = x, FUN = ordinal::ranef), FUN = unlist))
+  condVar_fits <- t(sapply(X = lapply(X = x, FUN = ordinal::condVar), FUN = unlist))
 
   random_effect <- pool_re(ranef_fits, condVar_fits)
 
