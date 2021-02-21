@@ -1,8 +1,9 @@
 #' Calculate pooled estimates of fixed effects, standard deviation of the
 #' random effect and conditional modes of the random effect terms.
 #'
-#' @param x A list containing clmm fists. For instance the analyses slot from
-#'          a mira object of the mice package.
+#' @param x A list containing clmm fits. For instance the analyses slot from
+#'          a mira object of the mice package. Or the result from the with.mids
+#'          function from the mice package.
 #' @param conf.int.re Type of 95% confidence interval for the variance of the
 #'                    random effect to be calculated. Default is none.
 #' @param data mira object used to fit the model. Needed for calculating the profile likelihood.
@@ -15,7 +16,7 @@
 pooling.clmm <- function(x, conf.int.re = c("none", "profile"), data = NULL){
 
   #some models would be inside a analyses element of a mice::mira object
-  if ( (length(x)<=1) & is.element("analyses", names(x) ) ) {
+  if(("mira" %in% class(x)) & is.element("analyses", names(x))){
     x<-x$analyses
   }
   conf.int.re <- match.arg(conf.int.re)
