@@ -4,10 +4,30 @@
 \alias{plot.pooled.clmm}
 \title{Function to visualize the effect of the clusters on the outcome}
 \usage{
-\method{plot}{pooled.clmm}(x, ...)
+\method{plot}{pooled.clmm}(
+  x,
+  xlim = NULL,
+  ylim = NULL,
+  xlab = "Cluster effect",
+  ylab = "Cluster",
+  refline = 0,
+  ...
+)
 }
 \arguments{
 \item{x}{a clmm.pool object returned from the pool.clmm function.}
+
+\item{xlim}{Limits of the x-axis. If this is not supplied a sensible default is chosen.}
+
+\item{ylim}{Limits of the y-axis. If this is not supplied a sensible default is chosen.}
+
+\item{xlab}{Label at the x-axis.}
+
+\item{ylab}{Label at the y-axis}
+
+\item{refline}{location of reference line in caterpillar plot. Default is 0.}
+
+\item{...}{Other arguments passed to the default plot function.}
 }
 \value{
 A plot showing the conditional modes of the clusters with the 95%
